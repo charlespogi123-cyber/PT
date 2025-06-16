@@ -3,36 +3,404 @@
 
 {% block content %}
 <div class="row">
-    <div class="col-md-8">
-        <h2> Network Traffic </h2>
-        <canvas id="trafficChart" height="200"> </canvas>
-    </div>
-    <div class="col-md-4">
-        <div class="card">
-            <div class="card-header"> Alerts</div>
+    <!-- Left Column (Network Traffic) -->
+    <div class="col-lg-8">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Network Traffic</h5>
+                <select class="form-select form-select-sm w-auto" id="timeRange">
+                    <option value="1">Last 1 hour</option>
+                    <option value="6">Last 6 hours</option>
+                    <option value="24" selected>Last 24 hours</option>
+                </select>
+            </div>
             <div class="card-body">
-                <div class="alert alert-warning"> High CPU on Router 1</div>
+                <canvas id="trafficChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column (System Health + Diagnostics) -->
+    <div class="col-lg-4">
+        <!-- System Health Cards -->
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-heartbeat me-2"></i>System Health</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="status-card bg-success">
+                            <i class="fas fa-server"></i>
+                            <h6>Core Switch</h6>
+                            <span class="badge bg-light text-dark">Online</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="status-card bg-danger">
+                            <i class="fas fa-server"></i>
+                            <h6>Access Switch</h6>
+                            <span class="badge bg-light text-dark">Offline</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="status-card bg-success">
+                            <i class="fas fa-shield-alt"></i>
+                            <h6>Firewall</h6>
+                            <span class="badge bg-light text-dark">Online</span>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="status-card bg-warning">
+                            <i class="fas fa-wifi"></i>
+                            <h6>Wireless AP</h6>
+                            <span class="badge bg-light text-dark">Degraded</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Network Diagnostics -->
+        <div class="card shadow-sm mt-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i>Network Diagnostics</h5>
+            </div>
+            <div class="card-body">
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="pingTarget" 
+                           placeholder="e.g. 10.0.100.10" value="10.0.100.10">
+                    <button class="btn btn-primary" id="pingButton">
+                        <i class="fas fa-play"></i> Ping
+                    </button>
+                </div>
+                <div id="pingResults" class="mt-3">
+                    <pre class="bg-dark text-white p-3 rounded" id="pingOutput">Target: Core Switch (10.0.100.10)
+Ready to ping...</pre>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Network Diagram Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-project-diagram me-2"></i>Network Architecture
+            </div>
+            <div class="card-body text-center">
+                <img src="{% static 'dashboard/img/network-diagram.png' %}" 
+                     class="img-fluid rounded border" 
+                     alt="Network Topology"
+                     style="max-height: 500px;">
+                <p class="mt-2 text-muted">
+                    <small>Current infrastructure (as of {% now 'F Y' %})</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Device Status Table -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <i class="fas fa-network-wired me-2"></i>Network Devices
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Hostname</th>
+                            <th>Type</th>
+                            <th>Management IP</th>
+                            <th>Status</th>
+                            <th>Last Check</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- FortiGate Firewalls -->
+                        <tr>
+                            <td>FM-FG-FW01</td>
+                            <td>Fortigate 60E</td>
+                            <td>10.0.100.10</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> ONLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+                        <tr>
+                            <td>FM-FG-FW02</td>
+                            <td>Fortigate 60E</td>
+                            <td>10.0.100.11</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> ONLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+                        
+                        <!-- Cisco Routers -->
+                        <tr>
+                            <td>FM-RTR01</td>
+                            <td>Cisco ISR 1100</td>
+                            <td>10.0.100.12</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> OFFLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+                        
+                        <!-- Cisco Core Switches -->
+                        <tr>
+                            <td>FM-CSW01</td>
+                            <td>Cisco Catalyst 9300</td>
+                            <td>10.0.100.14</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> ONLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+                        
+                        <!-- Cisco Access Switchess -->
+                        <tr>
+                            <td>FM-ASW01</td>
+                            <td>Cisco Access Switches</td>
+                            <td>10.0.100.16</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> ONLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+
+                        <!-- Cisco WLC -->
+                        <tr>
+                            <td>FM-WLC01</td>
+                            <td>Cisco WLC</td>
+                            <td>10.0.100.28</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> OFFLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+
+                         <!-- Cisco Aironet AP -->
+                        <tr>
+                            <td>FM-AP01</td>
+                            <td>Cisco Aironet AP</td>
+                            <td>10.0.100.30</td>
+                            <td>
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> OFFLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+
+                        <!-- Domain Controller -->
+                        <tr>
+                            <td>FM-DClocal</td>
+                            <td>Domain Controller</td>
+                            <td>10.0.60.100</td>
+                            <td>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check-circle"></i> ONLINE
+                                </span>
+                            </td>
+                            <td>{% now "H:i" %}</td>
+                        </tr>
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Active Alerts Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-danger">  <!-- Added red border -->
+            <div class="card-header bg-danger text-white d-flex justify-content-between">
+                <h5 class="mb-0">
+                    <i class="fas fa-exclamation-triangle me-2"></i>Active Alerts 
+                    <span class="badge bg-white text-danger ms-2">2 Critical</span>
+                </h5>
+                <button class="btn btn-sm btn-outline-light" id="refreshAlerts">
+                    <i class="fas fa-sync-alt"></i>
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <!-- Warning Alert -->
+                <div class="alert alert-warning alert-dismissible fade show m-3 d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-microchip fa-lg me-3"></i>
+                            <div>
+                                <h6 class="mb-0">High Resource Usage</h6>
+                                <small class="text-muted">Core Switch (FM-CSW01)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-white text-warning me-2">CPU: 85%</span>
+                        <small class="text-muted">{% now "H:i" %}</small>
+                        <button type="button" class="btn-close ms-2" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+                
+                <!-- Critical Alert -->
+                <div class="alert alert-danger alert-dismissible fade show m-3 d-flex align-items-center">
+                    <div class="flex-grow-1">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-unlink fa-lg me-3"></i>
+                            <div>
+                                <h6 class="mb-0">Device Offline</h6>
+                                <small class="text-muted">Access Switch (FM-ASW02)</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge bg-white text-danger me-2">15 min downtime</span>
+                        <small class="text-muted">{% now "H:i" %}</small>
+                        <button type="button" class="btn-close ms-2" data-bs-dismiss="alert"></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Alert Refresh -->
+<script>
+    // Auto-update alert timestamps every minute
+    setInterval(() => {
+        document.querySelectorAll('.text-muted').forEach(el => {
+            if(el.textContent.includes(':')) {
+                el.textContent = "{% now 'H:i' %}";
+            }
+        });
+    }, 60000);
+
+    // Manual refresh button
+    document.getElementById('refreshAlerts')?.addEventListener('click', () => {
+        location.reload(); // Or fetch new alerts via AJAX
+    });
+</script>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    // Chart.js Example
+    // ========== Traffic Chart ==========
+    const initTrafficChart = () => {
     const ctx = document.getElementById('trafficChart').getContext('2d');
-    new Chart(ctx, {
+    let chart = new Chart(ctx, {
         type: 'line',
-        data: {
-            labels: ['00:00', '06:00', '12:00', '18:00'],
-            datasets: [{
-                label: 'Bandwidth (Mbps)',
-                data: [12, 19, 3, 15],
-                borderColor: 'rgb(75, 192, 192)',
-                tension: 0.1
-            }]
+        data: getTrafficData('24'), // Default to 24 hours
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { mode: 'index', intersect: false }
+            },
+            scales: {
+                y: { beginAtZero: true, title: { display: true, text: 'Bandwidth (Mbps)' } }
+            }
         }
     });
+
+    // Update chart when time range changes
+    document.getElementById('timeRange').addEventListener('change', function() {
+        chart.data = getTrafficData(this.value);
+        chart.update();
+    });
+};
+
+// Generate different datasets based on time range
+function getTrafficData(range) {
+    let labels, dataIn, dataOut;
+    
+    switch(range) {
+        case '1': // Last 1 hour
+            labels = Array.from({length: 12}, (_, i) => `${i*5}:00`);
+            dataIn = Array.from({length: 12}, () => Math.floor(Math.random() * 50 + 20));
+            dataOut = Array.from({length: 12}, () => Math.floor(Math.random() * 30 + 10));
+            break;
+        case '6': // Last 6 hours
+            labels = ['00:00', '01:00', '02:00', '03:00', '04:00', '05:00'];
+            dataIn = Array.from({length: 6}, () => Math.floor(Math.random() * 80 + 20));
+            dataOut = Array.from({length: 6}, () => Math.floor(Math.random() * 60 + 15));
+            break;
+        case '24': // Last 24 hours
+        default:
+            labels = Array.from({length: 24}, (_, i) => `${i}:00`);
+            dataIn = Array.from({length: 24}, () => Math.floor(Math.random() * 100));
+            dataOut = Array.from({length: 24}, () => Math.floor(Math.random() * 100));
+    }
+
+    return {
+        labels: labels,
+        datasets: [
+            {
+                label: 'Inbound (Mbps)',
+                data: dataIn,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                tension: 0.3,
+                fill: true
+            },
+            {
+                label: 'Outbound (Mbps)',
+                data: dataOut,
+                borderColor: 'rgba(255, 99, 132, 1)',
+                backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                tension: 0.3,
+                fill: true
+            }
+        ]
+    };
+}
+
+    // ========== Ping Tool ==========
+    const setupPingTool = () => {
+        document.getElementById('pingButton').addEventListener('click', function() {
+            const target = document.getElementById('pingTarget').value;
+            const output = document.getElementById('pingOutput');
+            
+            output.textContent = `Pinging ${target}...`;
+            
+            setTimeout(() => {
+                output.textContent = `PING ${target} (${target}) 56(84) bytes of data.
+64 bytes from ${target}: icmp_seq=1 ttl=117 time=9.68 ms
+64 bytes from ${target}: icmp_seq=2 ttl=117 time=10.2 ms
+64 bytes from ${target}: icmp_seq=3 ttl=117 time=8.98 ms
+
+--- ${target} ping statistics ---
+3 packets transmitted, 3 received, 0% packet loss, time 2002ms
+rtt min/avg/max/mdev = 8.98/9.62/10.20/0.51 ms`;
+            }, 1000);
+        });
+    };
+
+    // Initialize everything when DOM loads
+    document.addEventListener('DOMContentLoaded', function() {
+        const trafficChart = initTrafficChart();
+        setupPingTool();
+    });
 </script>
+<script src="{% static 'dashboard/js/status-simulator.js' %}"></script>
 {% endblock %}
